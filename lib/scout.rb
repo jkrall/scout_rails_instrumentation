@@ -31,13 +31,13 @@ class Scout
       puts
       puts "Path: %s" % path
       puts "Requests for path: %i" % self.reports[path][:num_requests]
-      puts "Total runtime: %.2f" % runtimes[:total]
+      puts "Total runtime: %.2fms" % runtimes[:total]
       puts "Runtimes: %s" % runtimes.inspect
       puts
       [:runtimes, :db_runtimes, :render_runtimes].each do |runtime|
-        puts "Shortest #{runtime}: %.2f" % self.reports[path][runtime].min
-        puts "Longest #{runtime}: %.2f"  % self.reports[path][runtime].max
-        puts "Average #{runtime}: %.2f"  % (self.reports[path][runtime].sum / self.reports[path][:num_requests].to_f)
+        puts "Shortest #{runtime}: %.2fms" % self.reports[path][runtime].min
+        puts "Longest #{runtime}: %.2fms"  % self.reports[path][runtime].max
+        puts "Average #{runtime}: %.2fms"  % (self.reports[path][runtime].sum / self.reports[path][:num_requests].to_f)
         puts
       end
     end
