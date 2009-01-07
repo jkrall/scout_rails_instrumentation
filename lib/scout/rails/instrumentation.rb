@@ -12,7 +12,8 @@ class ActionController::Base
     runtimes[:view] = @rendering_runtime || @view_runtime
     runtimes[:total] = response.headers["X-Runtime"].to_f # runtimes[:db] + runtimes[:view] + time_in_controller + time_in_framework
     
-    Scout.report(runtimes, params, response)
+    # @view_runtime is 2.3+ and is a good indication of the change from seconds to milliseconds
+    Scout.report(runtimes, params, response, :in_seconds => @view_runtime.nil?)
     
     action_output
   end
