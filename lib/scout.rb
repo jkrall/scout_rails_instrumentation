@@ -29,7 +29,7 @@ class Scout
       self.reports[path][:runtimes]         << runtimes[:total]
       self.reports[path][:db_runtimes]      << runtimes[:db]
       self.reports[path][:render_runtimes]  << runtimes[:view]
-      self.reports[path][:queries]          =  self.queries
+      self.queries.each { |query| self.reports[path][:queries] << query }
       puts
       puts "Path: %s" % path
       puts "Requests for path: %i" % self.reports[path][:num_requests]
