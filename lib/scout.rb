@@ -3,6 +3,7 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..')))
 class Scout
   
   cattr_accessor :reports
+  cattr_accessor :queries
   
   class << self
     
@@ -17,17 +18,18 @@ class Scout
       
       path = "#{params[:controller]}/#{params[:action]}"
       self.reports[path] ||= {
-        :num_requests => 0,
-        :runtimes => [],
-        :db_runtimes => [],
-        :render_runtimes => []
+        :num_requests     => 0,
+        :runtimes         => [],
+        :db_runtimes      => [],
+        :render_runtimes  => [],
+        :queries          => []
       }
       
       self.reports[path][:num_requests]     += 1
       self.reports[path][:runtimes]         << runtimes[:total]
       self.reports[path][:db_runtimes]      << runtimes[:db]
       self.reports[path][:render_runtimes]  << runtimes[:view]
-      
+      self.reports[path][:queries]          =  self.queries
       puts
       puts "Path: %s" % path
       puts "Requests for path: %i" % self.reports[path][:num_requests]
@@ -40,14 +42,23 @@ class Scout
         puts "Average #{runtime}: %.2fms"  % (self.reports[path][runtime].sum / self.reports[path][:num_requests].to_f)
         puts
       end
+      self.queries.each do |(runtime, sql)|
+        puts "(%.2fms) %s" % [runtime, sql]
+      end
+    end
+    
+    # Fixes the runtimes to be in milliseconds.
+    # 
+    def fix_runtimes_to_ms!(runtimes)
+      [:db, :view, :total].each do |key|
+        runtimes[key] = seconds_to_ms(runtimes[key])
+      end
     end
     
     # Fix times in seconds to time in milliseconds.
     # 
-    def fix_runtimes_to_ms!(runtimes)
-      runtimes[:db] *= 1000
-      runtimes[:view] *= 1000
-      runtimes[:total] *= 1000
+    def seconds_to_ms(n)
+      n * 1000.0
     end
     
   end

@@ -1,8 +1,9 @@
 class ActionController::Base
-   
   def perform_action_with_instrumentation
     action_output = nil
     runtimes = {}
+    
+    Scout.queries = []
     
     runtimes[:benchmark] = Benchmark.ms do
       action_output = perform_action_without_instrumentation
@@ -17,5 +18,18 @@ class ActionController::Base
     
     action_output
   end
-  
+end
+
+class ActiveRecord::ConnectionAdapters::AbstractAdapter
+  def log_with_instrumentation(sql, name, &block)
+    start_time = Time.now
+    
+    results = log_without_instrumentation(sql, name, &block)
+    
+    unless Scout.queries.nil?
+      Scout.queries << [Scout.seconds_to_ms(Time.now - start_time), sql]
+    end
+    
+    results
+  end
 end
