@@ -9,12 +9,17 @@ class ActionController::Base
       action_output = perform_action_without_instrumentation
     end
     
-    runtimes[:db] = ActiveRecord::Base.connection.reset_runtime + (@db_rt_before_render || 0.0) + (@db_rt_after_render || 0.0)
-    runtimes[:view] = @rendering_runtime || @view_runtime
-    runtimes[:total] = response.headers["X-Runtime"].to_f # runtimes[:db] + runtimes[:view] + time_in_controller + time_in_framework
+    # make sure that the action completed successfully (otherwise, both will be
+    # nil). We suppress failure because most production systems will have email
+    # notifications etc.
+    if @rendering_runtime || @view_runtime
+      runtimes[:db] = ActiveRecord::Base.connection.reset_runtime + (@db_rt_before_render || 0.0) + (@db_rt_after_render || 0.0)
+      runtimes[:view] = @rendering_runtime || @view_runtime
+      runtimes[:total] = response.headers["X-Runtime"].to_f # runtimes[:db] + runtimes[:view] + time_in_controller + time_in_framework
     
-    # @view_runtime is 2.3+ and is a good indication of the change from seconds to milliseconds
-    Scout.report(runtimes, params, response, :in_seconds => @view_runtime.nil?)
+      # @view_runtime is 2.3+ and is a good indication of the change from seconds to milliseconds
+      Scout.report(runtimes, params, response, :in_seconds => @view_runtime.nil?)
+    end
     
     action_output
   end
