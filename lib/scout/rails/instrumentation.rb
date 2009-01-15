@@ -3,7 +3,7 @@ class ActionController::Base
     action_output = nil
     runtimes = {}
     
-    Scout.queries = []
+    Scout.reset_queries # collects queries only for this action
     
     runtimes[:benchmark] = Benchmark.ms do
       action_output = perform_action_without_instrumentation
@@ -18,7 +18,7 @@ class ActionController::Base
       runtimes[:total] = response.headers["X-Runtime"].to_f # runtimes[:db] + runtimes[:view] + time_in_controller + time_in_framework
       
       # @view_runtime is 2.3+ and is a good indication of the change from seconds to milliseconds
-      Scout.report(runtimes, params, response, :in_seconds => @view_runtime.nil?)
+      Scout.record_metrics(runtimes, params, response, :in_seconds => @view_runtime.nil?)
     end
     
     action_output
