@@ -94,9 +94,14 @@ class Scout
       end
       
       def handle_exception!(e)
-        logger.error "An error occurred while reporting: #{e.message}"
-        logger.error e.inspect
-        logger.error "\t" + e.backtrace.join("\n\t")
+        case e
+        when Timeout::Error
+          logger.error e.message
+        when Exception
+          logger.error "An unexpected error occurred while reporting: #{e.message}"
+          logger.error e.inspect
+          logger.error "\t" + e.backtrace.join("\n\t")
+        end
       end
       
       def calculate_report_runtimes(runtimes, num_requests)
