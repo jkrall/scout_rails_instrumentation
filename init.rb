@@ -1,4 +1,5 @@
 require 'scout/rails'
+Scout.start!
 ActionController::Base.class_eval do
   alias_method_chain :perform_action, :instrumentation
 end
