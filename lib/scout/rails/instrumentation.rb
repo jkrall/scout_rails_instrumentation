@@ -3,6 +3,7 @@ class ActionController::Base
     action_output = nil
     runtimes = {}
     
+    Scout.start_reporter! # ensure reporter is started
     Scout.reset_queries # collects queries only for this action
     
     runtimes[:benchmark] = Benchmark.ms do

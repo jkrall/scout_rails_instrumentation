@@ -13,6 +13,8 @@ class Scout
       def start!
         self.runner ||= begin
           Thread.new(self) do |reporter|
+            Thread.current[:pid] = $$ # record where thread is running,
+                                      # so we can remove runaways (Passenger)
             loop do
               begin
                 sleep(INTERVAL.to_i)

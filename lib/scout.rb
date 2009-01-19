@@ -12,7 +12,19 @@ class Scout
     
     def start!
       self.reset!
-      Reporter.start!
+      self.start_reporter!
+    end
+    
+    # Ensures that the Reporter is started.
+    # 
+    def start_reporter!
+      # ensure that the reporter runner thread is in the right PID
+      if !Reporter.runner.nil? and Reporter.runner[:pid] != $$
+        Reporter.runner.exit # be nice and terminate the thread first
+        Reporter.runner = nil # remove runner so new reporter will get started
+      end
+      # start the reporting runner thread if not started yet
+      Reporter.start! if Reporter.runner.nil?
     end
     
     def reset!
