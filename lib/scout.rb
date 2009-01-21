@@ -81,6 +81,34 @@ class Scout
       n * 1000.0
     end
     
+    # Obfuscates SQL queries, removing literal values.
+    # 
+    # This has several positive side-effects:
+    # * information security (sensitive data removed)
+    # * recognize emerging patterns (similar queries become identical)
+    # * minimize payload size (for plugin delivery)
+    # 
+    # Examples:
+    # 
+    #   obfuscate_sql("SELECT * FROM actors WHERE id = 10;")
+    #   # becomes "SELECT * FROM actors WHERE id = ?;"
+    #   
+    #   obfuscate_sql("SELECT * FROM actors WHERE name LIKE '%jones%';")
+    #   # becomes "SELECT * FROM actors WHERE name LIKE ?;"
+    #   
+    #   obfuscate_sql("SELECT * FROM actors WHERE secret = 'bee''s nees';")
+    #   # becomes "SELECT * FROM actors WHERE secret = ?;"
+    # 
+    def obfuscate_sql(sql)
+      # remove escaped strings (to not falsely terminate next pattern)
+      sql.gsub!("''", "?")
+      # remove literal string values
+      sql.gsub!(/'[^']*'/, "?")
+      # remove literal numerical values
+      sql.gsub!(/\d+/, "?")
+      sql
+    end
+    
     ### Resources
     
     def logger

@@ -33,7 +33,7 @@ class ActiveRecord::ConnectionAdapters::AbstractAdapter
     results = log_without_instrumentation(sql, name, &block)
     
     unless Scout.queries.nil?
-      Scout.queries << [Scout.seconds_to_ms(Time.now - start_time), sql]
+      Scout.queries << [Scout.seconds_to_ms(Time.now - start_time), Scout.obfuscate_sql(sql)]
     end
     
     results
