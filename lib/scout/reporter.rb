@@ -80,8 +80,11 @@ class Scout
             logger.info "  "
             
             logger.info "  Queries:"
-            action[:queries].each do |query|
-              logger.info "   * [%.5fms] %s" % query # [ms, sql]
+            action[:queries].each do |query_set|
+              query_set.each do |query|
+                logger.info "   * [%.5fms] %s" % query # [ms, sql]
+              end
+              logger.info "   = Total queries: %i\tTotal runtime: %.5fms" % [query_set.size, query_set.map{|(m,s)|m}.sum]
             end
           end
           

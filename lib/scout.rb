@@ -52,7 +52,7 @@ class Scout
       self.reports[path][:runtime]          << runtimes[:total]
       self.reports[path][:db_runtime]       << runtimes[:db]
       self.reports[path][:render_runtime]   << runtimes[:view]
-      self.queries.each { |query| self.reports[path][:queries] << query }
+      self.reports[path][:queries]          << self.queries
     end
     
     def empty_action_report
