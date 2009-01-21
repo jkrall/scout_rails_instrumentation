@@ -101,11 +101,11 @@ class Scout
     # 
     def obfuscate_sql(sql)
       # remove escaped strings (to not falsely terminate next pattern)
-      sql.gsub!("''", "?")
+      sql.gsub!(/(''|\\')/, "?")
       # remove literal string values
       sql.gsub!(/'[^']*'/, "?")
       # remove literal numerical values
-      sql.gsub!(/\d+/, "?")
+      sql.gsub!(/\b\d+\b/, "?")
       sql
     end
     
