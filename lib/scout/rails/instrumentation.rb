@@ -14,7 +14,10 @@ class ActionController::Base
     # nil). We suppress failure because most production systems will have email
     # notifications etc.
     if @rendering_runtime || @view_runtime
-      runtimes[:db] = ActiveRecord::Base.connection.reset_runtime + (@db_rt_before_render || 0.0) + (@db_rt_after_render || 0.0)
+      # ActiveRecord::Base.connection.reset_runtime resets the runtime so it is
+      # unreliable (other plugins/parts of Rails call it).
+      # Instead, sum the total runtime of the queries.
+      # runtimes[:db] = ActiveRecord::Base.connection.reset_runtime + (@db_rt_before_render || 0.0) + (@db_rt_after_render || 0.0)
       runtimes[:view] = @rendering_runtime || @view_runtime
       runtimes[:total] = response.headers["X-Runtime"].to_f # runtimes[:db] + runtimes[:view] + time_in_controller + time_in_framework
       
