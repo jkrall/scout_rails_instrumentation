@@ -31,10 +31,22 @@ class ActiveRecord::ConnectionAdapters::AbstractAdapter
     start_time = Time.now
     
     results = log_without_instrumentation(sql, name, &block)
+
     
-    unless Scout.queries.nil?
-      Scout.queries << [Scout.seconds_to_ms(Time.now - start_time), sql]
+    # temporary
+    explained = nil
+    ms=Scout.seconds_to_ms(Time.now - start_time)
+    if sql =~ /^SELECT /i &&  ms > 50
+      explained_sql = "EXPLAIN #{sql}"
+      explained = execute(explained_sql).fetch_hash
+      Scout.take_snapshot
     end
+    unless Scout.queries.nil?
+      Scout.queries << [ms, sql, start_time, explained ]
+    end    
+#    unless Scout.queries.nil?
+#      Scout.queries << [Scout.seconds_to_ms(Time.now - start_time), sql]
+#    end
     
     results
   end

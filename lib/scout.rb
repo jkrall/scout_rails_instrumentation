@@ -54,6 +54,16 @@ class Scout
       self.reports[path][:render_runtime]   << runtimes[:view]
       self.reports[path][:queries]          << self.queries
     end
+
+    # temporary
+    def take_snapshot
+      snapshot=['ps -ef', "tail -n 100 #{RAILS_ROOT}/log/#{RAILS_ENV}.log"].map do |command|
+        {:command=>command.split.first,:full_command=>command, :output=>`#{command}`, :time=>DateTime.now}
+      end
+      self.reports ||={}
+      self.reports[:snapshots] ||= []      
+      self.reports[:snapshots]<<snapshot
+    end    
     
     def empty_action_report
       {

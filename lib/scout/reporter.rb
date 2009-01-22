@@ -46,10 +46,13 @@ class Scout
         
         # calculate report runtimes
         report.each do |(path, action)|
+          next if path==:snapshots # temporary        
           RUNTIMES.each do |runtime|
             action[runtime] = calculate_report_runtimes(action[runtime], action[:num_requests])
           end
         end
+
+        report[:time]=DateTime.now
         
         # enqueue the message for background processing
         begin
