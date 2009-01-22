@@ -50,7 +50,7 @@ class Scout
       
       self.reports[path][:num_requests]     += 1
       self.reports[path][:runtime]          << runtimes[:total]
-      self.reports[path][:db_runtime]       << runtimes[:db]
+      self.reports[path][:db_runtime]       << self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
       self.reports[path][:render_runtime]   << runtimes[:view]
       self.reports[path][:queries]          << self.queries
     end
@@ -80,7 +80,7 @@ class Scout
     # Fixes the runtimes to be in milliseconds.
     # 
     def fix_runtimes_to_ms!(runtimes)
-      [:db, :view, :total].each do |key|
+      [:view, :total].each do |key|
         runtimes[key] = seconds_to_ms(runtimes[key])
       end
     end
