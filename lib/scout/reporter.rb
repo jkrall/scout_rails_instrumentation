@@ -31,7 +31,7 @@ class Scout
       def report!
         return if Scout.reports.nil? or Scout.reports.empty? # no report is necessary
         
-        timestamp = Time.now.strftime("%Y-%m-%d %H:%I:%S (%s)")
+        timestamp = Time.now.strftime("%Y-%m-%d %H:%I:%S (%s)").utc
         report = nil
         
         # atomically pull out the report then reset
