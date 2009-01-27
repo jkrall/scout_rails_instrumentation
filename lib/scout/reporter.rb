@@ -31,7 +31,8 @@ class Scout
       def report!
         return if Scout.reports.nil? or Scout.reports[:actions].empty? # no report is necessary
         
-        timestamp = Time.now.utc.strftime("%Y-%m-%d %H:%I:%S (%s)")
+        report_time = Time.now.utc
+        timestamp = report_time.strftime("%Y-%m-%d %H:%I:%S (%s)")
         report = nil
         
         # atomically pull out the report then reset
@@ -42,7 +43,9 @@ class Scout
           Scout.reset! # reset the accumulated reports
         end
         
-        ### refactor below into separate Thread
+        ### refactor below to report directly to the Scout agent
+        
+        report[:timestamp] = report_time
         
         report[:time] = DateTime.now
         
@@ -56,8 +59,10 @@ class Scout
         # enqueue the message for background processing
         begin
           filename = timestamp.gsub(/[^\d]+/, '') # strip out all non-digits
-          FileUtils.mkdir_p(File.join(RAILS_ROOT, 'tmp', 'scout-mq'))
-          File.open(File.join(RAILS_ROOT, 'tmp', 'scout-mq', filename), "w") do |file|
+          filename = "#{filename}-#{$$}.dump"
+          path = File.join(RAILS_ROOT, 'tmp', 'scout-mq')
+          FileUtils.mkdir_p(path)
+          File.open(File.join(path, filename), "w") do |file|
             file << Marshal.dump(report)
           end
         end
