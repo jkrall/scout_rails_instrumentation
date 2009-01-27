@@ -45,7 +45,7 @@ class Scout
         
         ### refactor below to report directly to the Scout agent
         
-        report[:timestamp] = report_time
+        report[:time] = report_time
         
         # calculate report runtimes
         report[:actions].each do |(path, action)|
