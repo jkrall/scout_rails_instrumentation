@@ -41,7 +41,7 @@ class Scout
     end
     
     def record_metrics(runtimes, params, response, options = {})
-      self.reports ||= { :actions => {} }
+      self.reports ||= self.empty_report
       
       fix_runtimes_to_ms!(runtimes) if options[:in_seconds]
       
@@ -53,6 +53,12 @@ class Scout
       self.reports[:actions][path][:db_runtime]     << self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
       self.reports[:actions][path][:render_runtime] << runtimes[:view]
       self.reports[:actions][path][:queries]        << self.queries
+    end
+    
+    def empty_report
+      {
+        :actions => {}
+      }
     end
     
     def empty_action_report
