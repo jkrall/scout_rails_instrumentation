@@ -29,7 +29,7 @@ class Scout
       end
       
       def report!
-        return if Scout.reports.nil? or Scout.reports.empty? # no report is necessary
+        return if Scout.reports.nil? or Scout.reports[:actions].empty? # no report is necessary
         
         timestamp = Time.now.utc.strftime("%Y-%m-%d %H:%I:%S (%s)")
         report = nil
@@ -44,15 +44,14 @@ class Scout
         
         ### refactor below into separate Thread
         
+        report[:time] = DateTime.now
+        
         # calculate report runtimes
-        report.each do |(path, action)|
-          next if path==:snapshots # temporary        
+        report[:actions].each do |(path, action)|
           RUNTIMES.each do |runtime|
             action[runtime] = calculate_report_runtimes(action[runtime], action[:num_requests])
           end
         end
-
-        report[:time]=DateTime.now
         
         # enqueue the message for background processing
         begin
@@ -68,7 +67,7 @@ class Scout
           logger.info "=== Reporting [%s]" % timestamp
           logger.info "="*80
           
-          report.each do |(path, action)|
+          report[:actions].each do |(path, action)|
             logger.info "  "
             logger.info "* Path: %s" % path
             logger.info "  Requests: %i" % action[:num_requests]
@@ -82,7 +81,7 @@ class Scout
             end
             logger.info "  "
             
-            logger.info "  Queries:"
+            logger.info "   Queries:"
             action[:queries].each do |query_set|
               query_set.each do |query|
                 logger.info "   * [%.5fms] %s" % query # [ms, sql]
