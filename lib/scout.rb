@@ -41,18 +41,18 @@ class Scout
     end
     
     def record_metrics(runtimes, params, response, options = {})
-      self.reports ||= {}
+      self.reports ||= { :actions => {} }
       
       fix_runtimes_to_ms!(runtimes) if options[:in_seconds]
       
       path = "#{params[:controller]}/#{params[:action]}"
-      self.reports[path] ||= self.empty_action_report
+      self.reports[:actions][path] ||= self.empty_action_report
       
-      self.reports[path][:num_requests]     += 1
-      self.reports[path][:runtime]          << runtimes[:total]
-      self.reports[path][:db_runtime]       << self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
-      self.reports[path][:render_runtime]   << runtimes[:view]
-      self.reports[path][:queries]          << self.queries
+      self.reports[:actions][path][:num_requests]   += 1
+      self.reports[:actions][path][:runtime]        << runtimes[:total]
+      self.reports[:actions][path][:db_runtime]     << self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
+      self.reports[:actions][path][:render_runtime] << runtimes[:view]
+      self.reports[:actions][path][:queries]        << self.queries
     end
     
     def empty_action_report
