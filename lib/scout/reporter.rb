@@ -1,23 +1,38 @@
 require 'pp'
+begin
+  require 'scout_agent/api' # ScoutAgent::API
+rescue LoadError
+  STDERR.puts "** Loading ScoutAgent::API mock (for testing)"
+  require 'json'
+  $message_queues = Hash.new { |h,k| h[k] = Queue.new }
+  class ScoutAgent
+    class API
+      def self.queue_message(name, object)
+        $message_queues[name] = object.to_json
+      end
+    end
+  end
+end
 
 class Scout
   class Reporter
     
-    cattr_accessor :runner
+    cattr_accessor :runner, :interval
     
     INTERVAL = 30.seconds # every
     LOCK = Mutex.new
     
     class << self
       
-      def start!
+      def start!(interval = INTERVAL)
+        self.interval = interval.to_i
         self.runner ||= begin
           Thread.new(self) do |reporter|
             Thread.current[:pid] = $$ # record where thread is running,
                                       # so we can remove runaways (Passenger)
             loop do
               begin
-                sleep(INTERVAL.to_i)
+                sleep(self.interval)
                 reporter.report!
               rescue Exception => e
                 raise unless reporter.handle_exception!(e)
@@ -43,8 +58,6 @@ class Scout
           Scout.reset! # reset the accumulated reports
         end
         
-        ### refactor below to report directly to the Scout agent
-        
         report[:time] = report_time
         
         # calculate report runtimes
@@ -54,54 +67,12 @@ class Scout
           end
         end
         
-        # enqueue the message for background processing
         begin
-          filename = timestamp.gsub(/[^\d]+/, '') # strip out all non-digits
-          filename = "#{filename}-#{$$}.dump"
-          path = File.join(RAILS_ROOT, 'tmp', 'scout-mq')
-          FileUtils.mkdir_p(path)
-          File.open(File.join(path, filename), "w") do |file|
-            file << Marshal.dump(report)
-          end
-        end
-        
-        # log the report
-        begin
-          logger.info "=== Reporting [%s]" % timestamp
-          logger.info "="*80
-          
-          report[:actions].each do |(path, action)|
-            logger.info "  "
-            logger.info "* Path: %s" % path
-            logger.info "  Requests: %i" % action[:num_requests]
-            logger.info "  "
-            
-            logger.info "   Runtimes:"
-            RUNTIMES.each do |runtime|
-              # self.logger.info "Shortest #{runtime}: %.2fms" % self.reports[path][runtime].min
-              logger.info "   * Average #{runtime}: %.2fms"  % action[runtime][:avg]
-              logger.info "   * Longest #{runtime}: %.2fms"  % action[runtime][:max]
-            end
-            logger.info "  "
-            
-            logger.info "   Queries:"
-            action[:queries].each do |query_set|
-              query_set.each do |query|
-                logger.info "   * [%.5fms] %s" % query # [ms, sql]
-              end
-              logger.info "   = Total queries: %i\tTotal runtime: %.5fms" % [query_set.size, query_set.map{|(m,s)|m}.sum]
-            end
-          end
-          
-          logger.debug ""
-          logger.debug "Debug:"
-          PP.pp(report, Scout.logger.instance_variable_get("@logdev").dev) if logger.debug? # hack!
-          
-          logger.info ""
-          logger.info "="*80
-          logger.info ""
+          # enqueue the message for background processing
+          ScoutAgent::API.queue_message("rails_instrumentation", report)
         end
       end
+      alias run report!
       
       def handle_exception!(e)
         case e
