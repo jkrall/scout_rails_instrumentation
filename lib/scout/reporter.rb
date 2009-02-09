@@ -8,7 +8,10 @@ rescue LoadError
   class ScoutAgent
     class API
       def self.queue_message(name, object)
-        $message_queues[name] = object.to_json
+        $message_queues[name].enq object.to_json
+      end
+      def self.pop(name)
+        $message_queues[name].deq
       end
     end
   end
@@ -24,6 +27,11 @@ class Scout
     
     class << self
       
+      def reset!
+        self.runner.exit rescue nil
+        self.runner = nil
+      end
+      
       def start!(interval = INTERVAL)
         self.interval = interval.to_i
         self.runner ||= begin
@@ -31,16 +39,20 @@ class Scout
             Thread.current[:pid] = $$ # record where thread is running,
                                       # so we can remove runaways (Passenger)
             loop do
-              begin
-                sleep(self.interval)
-                reporter.report!
-              rescue Exception => e
-                raise unless reporter.handle_exception!(e)
-              end
+              sleep(self.interval)
+              reporter.run
             end
           end
         end
         self.runner.run # start the report loop
+      end
+      
+      def run
+        begin
+          self.report!
+        rescue Exception => e
+          raise unless self.handle_exception!(e)
+        end
       end
       
       def report!
@@ -72,7 +84,6 @@ class Scout
           ScoutAgent::API.queue_message("rails_instrumentation", report)
         end
       end
-      alias run report!
       
       def handle_exception!(e)
         case e
@@ -96,6 +107,13 @@ class Scout
         Scout.logger(*args)
       end
       
+    end
+    
+    # This is a mocking method so that we can put an instance of a Reporter in
+    # place of a real Thread for testing purposes.
+    # 
+    def run
+      self.class.run
     end
     
   end

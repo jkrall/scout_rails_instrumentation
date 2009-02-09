@@ -33,7 +33,7 @@ class Scout
     end
     
     def reset_reports
-      self.reports = nil # the 
+      self.reports = nil
     end
     
     def reset_queries

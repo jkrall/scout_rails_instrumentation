@@ -1,6 +1,12 @@
 require 'test_helper'
+require File.join(File.dirname(__FILE__), 'test_helper')
 
 class ScoutTest < ActiveSupport::TestCase
+  
+  def teardown
+    Scout.reset!
+    Scout::Reporter.reset!
+  end
   
   # def start!
   #   self.reset!
@@ -32,15 +38,17 @@ class ScoutTest < ActiveSupport::TestCase
   #   self.queries = []
   # end
   
-  def test_startup
-    # Scout.start!
-    # Scout.reset!
-    # assert false
+  def test_startup_resets_reports
+    Scout.reports = {}
+    assert_nothing_raised { Scout.start! }
+    assert_equal nil, Scout.reports
   end
   
-  def test_reports_reset_collected_statistics_for_new_iteration
-    # Scout::Reporter.runner.run
-    # assert false
+  def test_startup_starts_the_reporter_background_thread
+    assert_equal nil, Scout::Reporter.runner
+    assert_nothing_raised { Scout.start! }
+    assert_equal Thread, Scout::Reporter.runner.class
+    assert Scout::Reporter.runner.alive?
   end
   
   # def record_metrics(runtimes, params, response, options = {})
