@@ -1,9 +1,17 @@
 require 'test_helper'
+require File.join(File.dirname(__FILE__), 'test_helper')
+
+class Member < ActiveRecord::Base; end
 
 class ScoutRailsIntegrationTest < ActiveSupport::TestCase
+  include ScoutTestHelpers
+  
+  def setup
+    load_schema!
+  end
   
   def test_queries_are_recorded_for_metrics
-    # assert false
+    Member.find(:all)
   end
   
   # controller-based tests are below
@@ -15,6 +23,7 @@ class ScoutController < ActionController::Base
 end
 
 class ScoutControllerTest < ActionController::TestCase
+  include ScoutTestHelpers
   
   # def test_plugin
   #   assert true

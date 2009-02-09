@@ -13,14 +13,22 @@ class ScoutReporterTest < ActiveSupport::TestCase
   end
   
   def test_reporter_runs_at_regular_intervals
-    # assert false
+    Scout::Reporter.reset!
+    assert_nothing_raised { Scout::Reporter.start!(0.1.seconds) }
+    
+    3.times do |n|
+      sleep 0.2 # seconds
+      assert_in_delta Time.now - 0.1.seconds.ago, Time.now - $scout_reporter[:last_run], 0.1.seconds
+    end
   end
   
   def test_start_sets_up_runner_and_initiates_run_cycle
     Scout::Reporter.reset!
-    assert_nothing_raised { Scout::Reporter.start! }
+    assert_nothing_raised { Scout::Reporter.start!(0.1.seconds) }
+    
     assert Scout::Reporter.runner.is_a?(Thread)
     assert Scout::Reporter.runner.alive?
+    assert !$scout_reporter[:last_run].nil?
   end
   
   def test_reports_reset_collected_statistics_for_new_iteration
