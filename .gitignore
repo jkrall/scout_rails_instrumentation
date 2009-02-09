@@ -1,1 +1,3 @@
 .svn
+test/test.db
+test/debug.log
