@@ -6,6 +6,7 @@ SCOUT_DIR = File.dirname(__FILE__)
 # by config/environment.rb
 (RAILS_GEM_VERSION = ActionPack::VERSION::STRING) rescue nil
 
+# THIS IS A HACK AND MUST BE RESOLVED!
 class Test::Unit::TestCase
   def setup_fixtures; end
   def teardown_fixtures; end
