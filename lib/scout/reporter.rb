@@ -8,6 +8,15 @@ class Scout
     INTERVAL = 30.seconds # every
     LOCK = Mutex.new
     
+    # This needs to be modified. It won't be used when the agent
+    # is turned into a gem.
+    API_PATH = '/Users/itsderek23/Projects/scout_agent/lib/scout_agent/api.rb'
+    require API_PATH
+    # TODO - Should be stored in a config file
+    MISSION_ID = 32911
+    # If true, then messages aren't sent in the background and the response is checked. 
+    DEBUG_MODE = true
+    
     class << self
       
       def start!
@@ -56,12 +65,21 @@ class Scout
         
         # enqueue the message for background processing
         begin
-          filename = timestamp.gsub(/[^\d]+/, '') # strip out all non-digits
-          filename = "#{filename}-#{$$}.dump"
-          path = File.join(RAILS_ROOT, 'tmp', 'scout-mq')
-          FileUtils.mkdir_p(path)
-          File.open(File.join(path, filename), "w") do |file|
-            file << Marshal.dump(report)
+          # filename = timestamp.gsub(/[^\d]+/, '') # strip out all non-digits
+          #           filename = "#{filename}-#{$$}.dump"
+          #           path = File.join(RAILS_ROOT, 'tmp', 'scout-mq')
+          #           FileUtils.mkdir_p(path)
+          #           File.open(File.join(path, filename), "w") do |file|
+          #             file << Marshal.dump(report)
+          #           end
+          opts = DEBUG_MODE ? {} : {:background => true}
+          response = ScoutAgent::API.queue_for_mission(MISSION_ID, report)
+          if DEBUG_MODE
+            if response.success?
+              logger.info "[#{Time.now}] Queued report"
+            else
+              logger.info "[#{Time.now}] Error queuing report"
+            end
           end
         end
         
