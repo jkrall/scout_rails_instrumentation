@@ -45,9 +45,9 @@ class ScoutReporterTest < ActiveSupport::TestCase
   
   def test_reporter_can_calculate_report_times_given_range_of_actual_times
     runtimes, requests = [12, 14, 81, 15, 22], 5
-    report = Scout::Reporter.calculate_report_runtimes(runtimes, requests)
-    assert_equal runtimes.max, report[:max]
-    assert_equal runtimes.sum / requests.to_f, report[:avg]
+    avg, max = Scout::Reporter.calculate_report_runtimes(runtimes, requests)
+    assert_equal runtimes.max, max
+    assert_equal runtimes.sum / requests.to_f, avg
   end
   
 end
