@@ -79,9 +79,9 @@ class Scout
         report[:actions].each do |(path, action)|
           RUNTIMES.each do |runtime|
             runtimes = report[:actions][path].delete(runtime)
-            runtimes = calculate_report_runtimes(runtimes, action[:num_requests])
-            report[:actions][path]["#{runtime}_avg"] = runtimes[:avg]
-            report[:actions][path]["#{runtime}_max"] = runtimes[:max]
+            avg, max = calculate_report_runtimes(runtimes, action[:num_requests])
+            report[:actions][path]["#{runtime}_avg".to_sym] = avg
+            report[:actions][path]["#{runtime}_max".to_sym] = max
           end
         end
         
@@ -107,10 +107,7 @@ class Scout
       end
       
       def calculate_report_runtimes(runtimes, num_requests)
-        {
-          :avg => (runtimes.sum / num_requests.to_f),
-          :max => runtimes.max
-        }
+        [(runtimes.sum / num_requests.to_f), runtimes.max]
       end
       
       def logger(*args)
