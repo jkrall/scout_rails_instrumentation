@@ -5,13 +5,13 @@ class Member < ActiveRecord::Base; end
 
 class ScoutRailsIntegrationTest < ActiveSupport::TestCase
   include ScoutTestHelpers
-  
-  def setup
-    load_schema!
-  end
+  load_schema!
   
   def test_queries_are_recorded_for_metrics
+    assert Scout.queries.empty?
     Member.find(:all)
+    assert !Scout.queries.empty?
+    assert_match "SELECT * FROM \"members\"", Scout.queries.first[1]
   end
   
   # controller-based tests are below
