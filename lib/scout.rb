@@ -93,6 +93,7 @@ class Scout
       @logger ||= begin
                     logger = Logger.new(File.join(RAILS_ROOT, "log", "scout_instrumentation.log"))
                     logger.level = ActiveRecord::Base.logger.level
+                    logger.formatter = proc{|s,t,p,m|"%5s [%s] %s\n" % [s, t.strftime("%Y-%m-%d %H:%M:%S"), m]}
                     logger
                   end
     end

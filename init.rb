@@ -1,4 +1,4 @@
-if RAILS_ENV == "production"
+if RAILS_ENV == "production" || RAILS_ENV == "development"
   require 'scout/rails'
   Scout.start!
   ActionController::Base.class_eval do

@@ -1,5 +1,7 @@
 require 'pp'
 begin
+  $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
+  $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
   require 'scout_agent/api' # ScoutAgent::API
 rescue LoadError
   STDERR.puts "** Loading ScoutAgent::API mock (for testing)"
@@ -7,11 +9,11 @@ rescue LoadError
   $message_queues = Hash.new { |h,k| h[k] = Queue.new }
   class ScoutAgent
     class API
-      def self.queue_message(name, object)
-        $message_queues[name].enq object.to_json
+      def self.queue_for_mission(id, object, opts = {})
+        $message_queues[id].enq object.to_json
       end
-      def self.pop(name)
-        $message_queues[name].deq
+      def self.pop(id)
+        $message_queues[id].deq
       end
     end
   end
@@ -22,15 +24,10 @@ class Scout
     
     cattr_accessor :runner, :interval
     
-    INTERVAL = 30.seconds # every
+    INTERVAL = 3.seconds # every
     LOCK = Mutex.new
     
-    # This needs to be modified. It won't be used when the agent
-    # is turned into a gem.
-    API_PATH = '/Users/itsderek23/Projects/scout_agent/lib/scout_agent/api.rb'
-    require API_PATH
-    # TODO - Should be stored in a config file
-    MISSION_ID = 32911
+    MISSION_ID = 32911 # TODO: put in config
     
     class << self
       
@@ -82,10 +79,10 @@ class Scout
         # calculate report runtimes
         report[:actions].each do |(path, action)|
           RUNTIMES.each do |runtime|
-            runtimes = report[:actions][action].delete(runtime)
+            runtimes = report[:actions][path].delete(runtime)
             runtimes = calculate_report_runtimes(runtimes, action[:num_requests])
-            report[:actions][action]["#{runtime}_avg"] = runtimes[:avg]
-            report[:actions][action]["#{runtime}_max"] = runtimes[:max]
+            report[:actions][path]["#{runtime}_avg"] = runtimes[:avg]
+            report[:actions][path]["#{runtime}_max"] = runtimes[:max]
           end
         end
         
