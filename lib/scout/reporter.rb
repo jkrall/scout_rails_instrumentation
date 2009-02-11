@@ -1,6 +1,7 @@
 begin
   $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
   $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
+  $:.unshift('/Users/andre/projects/rails/scout_agent/lib/')
   require 'scout_agent/api' # ScoutAgent::API
 rescue LoadError
   STDERR.puts "** Loading ScoutAgent::API mock (for testing)"
