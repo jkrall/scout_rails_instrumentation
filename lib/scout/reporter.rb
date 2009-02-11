@@ -1,4 +1,3 @@
-require 'pp'
 begin
   $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
   $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
