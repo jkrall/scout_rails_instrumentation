@@ -24,7 +24,7 @@ class Scout
     
     cattr_accessor :runner, :interval
     
-    INTERVAL = 3.seconds # every
+    INTERVAL = 30.seconds # every
     LOCK = Mutex.new
     
     MISSION_ID = 32911 # TODO: put in config
