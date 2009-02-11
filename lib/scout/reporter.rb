@@ -25,6 +25,13 @@ class Scout
     INTERVAL = 30.seconds # every
     LOCK = Mutex.new
     
+    # This needs to be modified. It won't be used when the agent
+    # is turned into a gem.
+    API_PATH = '/Users/itsderek23/Projects/scout_agent/lib/scout_agent/api.rb'
+    require API_PATH
+    # TODO - Should be stored in a config file
+    MISSION_ID = 32911
+    
     class << self
       
       def reset!
@@ -75,13 +82,20 @@ class Scout
         # calculate report runtimes
         report[:actions].each do |(path, action)|
           RUNTIMES.each do |runtime|
-            action[runtime] = calculate_report_runtimes(action[runtime], action[:num_requests])
+            runtimes = report[:actions][action].delete(runtime)
+            runtimes = calculate_report_runtimes(runtimes, action[:num_requests])
+            report[:actions][action]["#{runtime}_avg"] = runtimes[:avg]
+            report[:actions][action]["#{runtime}_max"] = runtimes[:max]
           end
         end
         
+        # enqueue the message for background processing
         begin
-          # enqueue the message for background processing
-          ScoutAgent::API.queue_message("rails_instrumentation", report)
+          if ScoutAgent::API.queue_for_mission(MISSION_ID, report).success?
+            logger.debug "Report queued"
+          else
+            logger.error "Error queuing report"
+          end
         end
       end
       
