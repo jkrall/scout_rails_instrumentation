@@ -2,6 +2,7 @@ begin
   $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
   $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
   $:.unshift('/Users/andre/projects/rails/scout_agent/lib/')
+  $:.unshift('/root/scout_agent/lib/')  
   require 'scout_agent/api' # ScoutAgent::API
 rescue LoadError
   STDERR.puts "** Loading ScoutAgent::API mock (for testing)"
@@ -27,7 +28,7 @@ class Scout
     INTERVAL = 30.seconds # every
     LOCK = Mutex.new
     
-    MISSION_ID = 32911 # TODO: put in config
+    MISSION_ID = 1675 # TODO: put in config
     
     class << self
       
@@ -88,11 +89,13 @@ class Scout
         
         # enqueue the message for background processing
         begin
-          if ScoutAgent::API.queue_for_mission(MISSION_ID, report).success?
+          response = ScoutAgent::API.queue_for_mission(MISSION_ID, report)
+          if response.success?
             logger.debug "Report queued"
           else
-            logger.error "Error queuing report"
-          end
+            logger.error "Error:  #{response.error_message} (#{response.error_code})"
+          end          
+         
         end
       end
       
