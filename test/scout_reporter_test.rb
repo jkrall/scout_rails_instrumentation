@@ -39,6 +39,7 @@ class ScoutReporterTest < ActiveSupport::TestCase
   end
   
   def test_reporter_handles_common_exceptions_gracefully
+    Scout.record_metrics(*mocked_request)
     ScoutAgent::API.expects(:queue_for_mission).raises(Timeout::Error, 'testing failures')
     assert_nothing_raised { Scout::Reporter.runner.run }
   end

@@ -20,39 +20,47 @@ end
 
 class ScoutController < ActionController::Base
   def index; render :text => ""; end
+  def show; render :text => Member.find(:first).name; end
+  def fail; raise; end
 end
 
 class ScoutControllerTest < ActionController::TestCase
   include ScoutTestHelpers
   
-  # def test_plugin
-  #   assert true
-  #   get :index
-  #   assert_response :success
-  # end
+  def teardown
+    Scout.reset!
+    Scout::Reporter.reset!
+  end
   
   def test_action_dispatch_ensures_reporter_is_running_in_the_background
+    Scout::Reporter.reset!
+    assert_nil Scout::Reporter.runner
     get :index
     assert_response :success
-    # assert false
+    assert !Scout::Reporter.runner.nil?
+    assert Scout::Reporter.runner.alive?
   end
   
   def test_successful_action_dispatch_results_in_recorded_metrics
+    assert Scout.reports.nil?
     get :index
     assert_response :success
-    # assert false
+    assert !Scout.reports.nil?
+    assert !Scout.reports[:actions]["scout/index"].empty?
   end
   
   def test_failed_action_dispatch_foregoes_metric_gathering
-    get :index
-    assert_response :success
-    # assert false
+    assert Scout.reports.nil?
+    assert_raise(RuntimeError) { get :fail }
+    assert Scout.reports.nil?
   end
   
-  def test_metrics_are_gathered_for_reports_on_method_dispatch
-    get :index
+  def test_queries_are_gathered_for_reports_during_action_dispatch
+    assert Scout.queries.empty?
+    get :show
     assert_response :success
-    # assert false
+    assert !Scout.queries.empty?
+    assert_match "SELECT * FROM \"members\"", Scout.queries.first[1]
   end
   
 end

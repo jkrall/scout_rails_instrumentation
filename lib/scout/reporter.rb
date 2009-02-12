@@ -3,19 +3,7 @@ begin
   $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
   require 'scout_agent/api' # ScoutAgent::API
 rescue LoadError
-  STDERR.puts "** Loading ScoutAgent::API mock (for testing)"
-  require 'json'
-  $message_queues = Hash.new { |h,k| h[k] = Queue.new }
-  class ScoutAgent
-    class API
-      def self.queue_for_mission(id, object, opts = {})
-        $message_queues[id].enq object.to_json
-      end
-      def self.pop(id)
-        $message_queues[id].deq
-      end
-    end
-  end
+  raise "Unable load the ScoutAgent::API"
 end
 
 class Scout
