@@ -5,6 +5,7 @@ class ScoutReporterTest < ActiveSupport::TestCase
   include ScoutTestHelpers
   
   def setup
+    Scout.reset!
     Scout::Reporter.runner = Scout::Reporter.new
   end
   
@@ -44,11 +45,25 @@ class ScoutReporterTest < ActiveSupport::TestCase
     assert_nothing_raised { Scout::Reporter.runner.run }
   end
   
-  def test_reporter_can_calculate_report_times_given_range_of_actual_times
+  def test_reporter_can_calculate_avg_and_max_report_times_given_range_of_actual_times
     runtimes, requests = [12, 14, 81, 15, 22], 5
-    avg, max = Scout::Reporter.calculate_report_runtimes(runtimes, requests)
+    avg, max = Scout::Reporter.calculate_avg_and_max_runtimes(runtimes, requests)
     assert_equal runtimes.max, max
     assert_equal runtimes.sum / requests.to_f, avg
+  end
+  
+  def test_reporter_calculates_throughput_and_average_request_time
+    runtime, requests = 5, 3
+    
+    requests.times do
+      Scout.record_metrics(*mocked_request({:total => runtime}))
+    end # total of 15ms total runtime
+    
+    Scout::Reporter.calculate_report_runtimes!(Scout.reports)
+    avg_request_time, throughput = Scout::Reporter.calculate_avg_request_time_and_throughput(Scout.reports)
+    
+    assert_equal 5, avg_request_time
+    assert_equal((60.0 * 100) / avg_request_time, throughput)
   end
   
 end

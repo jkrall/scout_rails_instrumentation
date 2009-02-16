@@ -66,14 +66,10 @@ class Scout
         report[:time] = report_time
         
         # calculate report runtimes
-        report[:actions].each do |(path, action)|
-          RUNTIMES.each do |runtime|
-            runtimes = report[:actions][path].delete(runtime)
-            avg, max = calculate_report_runtimes(runtimes, action[:num_requests])
-            report[:actions][path]["#{runtime}_avg".to_sym] = avg
-            report[:actions][path]["#{runtime}_max".to_sym] = max
-          end
-        end
+        calculate_report_runtimes!(report)
+        
+        # calculate average request time and throughput
+        report[:avg_request_time], report[:throughput] = calculate_avg_request_time_and_throughput(report)
         
         # enqueue the message for background processing
         begin
@@ -98,8 +94,25 @@ class Scout
         end
       end
       
-      def calculate_report_runtimes(runtimes, num_requests)
+      def calculate_report_runtimes!(report)
+        report[:actions].each do |(path, action)|
+          RUNTIMES.each do |runtime|
+            runtimes = report[:actions][path].delete(runtime)
+            avg, max = calculate_avg_and_max_runtimes(runtimes, action[:num_requests])
+            report[:actions][path]["#{runtime}_avg".to_sym] = avg
+            report[:actions][path]["#{runtime}_max".to_sym] = max
+          end
+        end
+      end
+      
+      def calculate_avg_and_max_runtimes(runtimes, num_requests)
         [(runtimes.sum / num_requests.to_f), runtimes.max]
+      end
+      
+      def calculate_avg_request_time_and_throughput(report)
+        avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg] }.sum / report[:actions].size
+        throughput = (60.0 * 100) / avg_request_time # adjusts for ms
+        [avg_request_time, throughput]
       end
       
       def logger(*args)

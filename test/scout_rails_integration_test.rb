@@ -26,6 +26,7 @@ end
 
 class ScoutControllerTest < ActionController::TestCase
   include ScoutTestHelpers
+  load_schema!
   
   def teardown
     Scout.reset!
