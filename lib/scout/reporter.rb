@@ -111,7 +111,7 @@ class Scout
       
       def calculate_avg_request_time_and_throughput(report)
         avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg] }.sum / report[:actions].size
-        throughput = (60.0 * 100) / avg_request_time # adjusts for ms
+        throughput = (60.0 * 1000) / avg_request_time # adjusts for ms
         [avg_request_time, throughput]
       end
       

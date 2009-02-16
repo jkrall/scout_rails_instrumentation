@@ -63,7 +63,7 @@ class ScoutReporterTest < ActiveSupport::TestCase
     avg_request_time, throughput = Scout::Reporter.calculate_avg_request_time_and_throughput(Scout.reports)
     
     assert_equal 5, avg_request_time
-    assert_equal((60.0 * 100) / avg_request_time, throughput)
+    assert_equal((60.0 * 1000) / avg_request_time, throughput)
   end
   
 end
