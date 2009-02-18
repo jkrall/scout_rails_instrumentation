@@ -42,6 +42,7 @@ class ActiveRecord::ConnectionAdapters::AbstractAdapter
     if sql =~ /^SELECT /i &&  ms > 50
       explained_sql = "EXPLAIN #{sql}"
       explained = execute(explained_sql).fetch_hash
+      ScoutAgent::API.take_snapshot :background=>true
     end
     unless Scout.queries.nil?
       Scout.queries << [ms, sql, start_time, explained]
