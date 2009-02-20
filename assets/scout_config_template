@@ -1,5 +1,5 @@
-# This is where set your Rails Instrumentation plugin id, so the rails instrumentation can identify itself
-# to the Scout agent.
+# This is where set your Rails Instrumentation plugin id, so the instrumentation plugin 
+# can identify itself to the Scout agent.
 #
 # * You need to supply the Rails instrumentation plugin id from your account at http://scoutapp.com
 # * Typically, you will provide the plugin id for production, but not development.
@@ -10,18 +10,18 @@
 ##########################################################################
 # Single-server setup (most common setup)
 ###########################################################################
-production: # <-- REQUIRED: your rails plugin id goes here
-development: # <-- typically you'll leave this blanks
+production: # <-- REQUIRED: your Rails Instrumentation plugin id goes here
+development: # <-- typically you'll leave this blank
 
 
 ##########################################################################
 # Multi-server setup (advanced)
 ##########################################################################
 #production:
-#  my.server1.com: # <- your plugin id for server1 goes here
-#  my.server2.com: # <- your plugin id for server2 goes here
+#  server1.com: # <- your plugin id for server1 goes here
+#  server2.com: # <- your plugin id for server2 goes here
 #  
 #  
 #development: 
-#  my.server1.com: # <- plugin id for first developer's box
-#  my.server2.com: # <- plugin id for second developer's box
+#  server1.com: # <- plugin id for first developer's box
+#  server2.com: # <- plugin id for second developer's box
