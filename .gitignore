@@ -3,3 +3,4 @@
 .project
 test/test.db
 test/debug.log
+scout_config.yml

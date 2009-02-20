@@ -30,7 +30,10 @@ class Scout
       }
       config_path=File.join(File.dirname(__FILE__),"../scout_config.yml")  
     
-      return false if !File.exists(config_path)
+      if !File.exists?(config_path)
+        puts "** Could not load Scout Instrumentation. Check for config file at #{config_path}"
+        return false 
+      end
       begin
         o=YAML.load(File.read(config_path))
         self.config[:interval]=o['interval'] if o['interval'].is_a?(Integer)
@@ -38,23 +41,23 @@ class Scout
         
         # this can be a simple value, or a hash of hostnames=>values
         temp=o[RAILS_ENV]
-        
+                
         if temp.is_a?(Integer)
           self.config[:plugin_id]=temp
-          puts "** Scout Instrumentation Loaded with plugin_id=#{self.plugin_id} for environment=#{RAILS_ENV}"
+          puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV}"
           return true
         elsif temp.is_a?(Hash)
-          hostname=`hostname`
+          hostname=`hostname`.chomp
           temp2=temp[hostname]
-          if temp.is_a?(Integer)
-            self.plugin_id=temp2
-            puts "** Scout Instrumentation Loaded with plugin_id=#{self.plugin_id} for environment=#{RAILS_ENV} and hostname=#{hostname}"
+          if temp2.is_a?(Integer)
+            self.config[:plugin_id]=temp2
+            puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV} and hostname=#{hostname}"
             return true
           else
             puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV} and hostname=#{hostname}"
           end
         else  
-          puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV}"
+          puts "** Scout Instrumentation disabled for environment=#{RAILS_ENV}"
         end
         return false # if we got to here, there was no successful config file loading
       rescue 
