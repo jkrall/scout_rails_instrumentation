@@ -1,3 +1,5 @@
 .svn
+.loadpath
+.project
 test/test.db
 test/debug.log

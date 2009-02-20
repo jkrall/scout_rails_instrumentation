@@ -39,7 +39,7 @@ class ActiveRecord::ConnectionAdapters::AbstractAdapter
     explained = nil
     ms = Scout.seconds_to_ms(Time.now - start_time)
     
-    if sql =~ /^SELECT /i &&  ms > 50
+    if sql =~ /^SELECT /i &&  ms > Scout.config[:explain_queries_over]
       explained_sql = "EXPLAIN #{sql}"
       explained = execute(explained_sql).fetch_hash
     end
