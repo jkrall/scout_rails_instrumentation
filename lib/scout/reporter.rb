@@ -71,6 +71,8 @@ class Scout
         # calculate average request time and throughput
         report[:avg_request_time], report[:throughput] = calculate_avg_request_time_and_throughput(report)
         
+        run_explains_for_slow_queries!(report)
+        
         # enqueue the message for background processing
         begin
           response = ScoutAgent::API.queue_for_mission(MISSION_ID, report)
@@ -113,6 +115,23 @@ class Scout
         avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg] }.sum / report[:actions].size
         throughput = (60.0 * 1000) / avg_request_time # adjusts for ms
         [avg_request_time, throughput]
+      end
+      
+      def run_explains_for_slow_queries!(report)
+        report[:actions].each do |(path, action)|
+          action[:queries].each_with_index do |queries, i|
+            queries.each_with_index do |(ms, sql), j|
+              if sql =~ /^SELECT /i and ms > 50
+                report[:actions][path][:queries][i][j] << ActiveRecord::Base.connection.explain(sql)
+                # TODO: determine a better place for the snapshot
+                ScoutAgent::API.take_snapshot(:background => true)
+              end
+            end
+          end
+        end
+      rescue Exception => e
+        logger.error "An error occurred EXPLAINing a query: %s" % e.message
+        # logger.error "\t%s" % e.backtrace.join("\n\t") # unneeded
       end
       
       def logger(*args)
