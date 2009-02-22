@@ -1,0 +1,18 @@
+# This file is executed when the plugin is installed. It sets up the configuration file 
+# and provides next steps to put the plugin to use.
+
+# template 
+config_file_name='scout_config.yml'
+template_path=File.join(File.dirname(__FILE__), 'assets/scout_config_template')
+path=File.expand_path(File.join(File.dirname(__FILE__), config_file_name))
+
+if File.exists?(path)
+  puts "You already have a configuration file at #{path}. We've left it as-is. This is normal if you've re-installed the plugin. "+
+       "However, please check #{template_path} to see if anything has changed since your config file was created."
+else
+  File.open(path, "w") do |f|
+    f.puts IO.read(template_path)
+  end   
+end
+
+puts File.read(File.join(File.dirname(__FILE__), 'welcome.txt')).gsub(config_file_name, path)

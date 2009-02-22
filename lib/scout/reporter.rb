@@ -8,16 +8,15 @@ rescue LoadError
   raise "Unable load the ScoutAgent::API"
 end
 
+
+# Reporter relies on two configuration settings:
+# Scout.config[:plugin_id] -- the plugin id provided in the users' account at scoutapp.com. User provides this the config file.
+# Scout.config[:interval] -- (seconds) the interval at which the instrumentation runs. 30 is normal. Typically not changed by the user.
 class Scout
   class Reporter
-    
-    cattr_accessor :runner, :interval
-    
-    INTERVAL = 30.seconds # every
+    cattr_accessor :runner, :interval    
     LOCK = Mutex.new
-    
-    MISSION_ID = 1675 # TODO: put in config
-    
+        
     class << self
       
       def reset!
@@ -25,7 +24,7 @@ class Scout
         self.runner = nil
       end
       
-      def start!(interval = INTERVAL)
+      def start!(interval = Scout.config[:interval].seconds)
         self.interval = interval.to_i
         self.runner ||= begin
           Thread.new(self) do |reporter|
@@ -75,7 +74,7 @@ class Scout
         
         # enqueue the message for background processing
         begin
-          response = ScoutAgent::API.queue_for_mission(MISSION_ID, report)
+          response = ScoutAgent::API.queue_for_mission(Scout.config[:plugin_id], report)
           if response.success?
             logger.debug "Report queued"
           else
@@ -121,7 +120,7 @@ class Scout
         report[:actions].each do |(path, action)|
           action[:queries].each_with_index do |queries, i|
             queries.each_with_index do |(ms, sql), j|
-              if sql =~ /^SELECT /i and ms > 50
+              if sql =~ /^SELECT /i and ms > Scout.config[:explain_queries_over]
                 report[:actions][path][:queries][i][j] << ActiveRecord::Base.connection.explain(sql)
                 # TODO: determine a better place for the snapshot
                 ScoutAgent::API.take_snapshot(:background => true)

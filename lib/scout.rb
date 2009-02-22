@@ -6,13 +6,64 @@ class Scout
   
   RUNTIMES = [:runtime, :db_runtime, :render_runtime]
   
-  cattr_accessor :reports, :queries, :reporter, :logger
+  cattr_accessor :reports, :queries, :reporter, :logger, :config
   
   class << self
     
+    # returns true if configuration was successfully loaded, false if not
     def start!
       self.reset!
-      self.start_reporter!
+      if self.load_configuration
+        self.start_reporter!
+        return true
+      end
+      return false
+    end
+    
+    # Load configuration from yaml. Only loads once in the beginning.
+    # sets self.plugin_id, and returns true if successful
+    def load_configuration
+      self.config={
+        :plugin_id=>nil,              # must be set by user in configuration, and must match the plugin id assigned by scoutapp.com
+        :explain_queries_over=>100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
+        :interval=>30                 # frequency of execution of the background thread, in seconds
+      }
+      config_path=File.join(File.dirname(__FILE__),"../scout_config.yml")  
+    
+      if !File.exists?(config_path)
+        puts "** Could not load Scout Instrumentation. Check for config file at #{config_path}"
+        return false 
+      end
+      begin
+        o=YAML.load(File.read(config_path))
+        self.config[:interval]=o['interval'] if o['interval'].is_a?(Integer)
+        self.config[:explain_queries_over]=o['explain_queries_over'] if o['explain_queries_over'].is_a?(Integer)
+        
+        # this can be a simple value, or a hash of hostnames=>values
+        temp=o[RAILS_ENV]
+                
+        if temp.is_a?(Integer)
+          self.config[:plugin_id]=temp
+          puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV}"
+          return true
+        elsif temp.is_a?(Hash)
+          hostname=`hostname`.chomp
+          temp2=temp[hostname]
+          if temp2.is_a?(Integer)
+            self.config[:plugin_id]=temp2
+            puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV} and hostname=#{hostname}"
+            return true
+          else
+            puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV} and hostname=#{hostname}"
+          end
+        else  
+          puts "** Scout Instrumentation disabled for environment=#{RAILS_ENV}"
+        end
+        return false # if we got to here, there was no successful config file loading
+      rescue 
+        puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV} : #{$!}"
+        return false
+      end
     end
     
     # Ensures that the Reporter is started.
