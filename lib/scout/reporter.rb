@@ -1,4 +1,5 @@
 begin
+  # TODO: Fix this issue with the load agent path.
   $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
   $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
   $:.unshift('/Users/andre/projects/rails/scout_agent/lib/')
@@ -8,15 +9,18 @@ rescue LoadError
   raise "Unable load the ScoutAgent::API"
 end
 
-
 # Reporter relies on two configuration settings:
-# Scout.config[:plugin_id] -- the plugin id provided in the users' account at scoutapp.com. User provides this the config file.
-# Scout.config[:interval] -- (seconds) the interval at which the instrumentation runs. 30 is normal. Typically not changed by the user.
+# * Scout.config[:plugin_id]: the plugin id provided in the users' account at
+#                             scoutapp.com. User provides this the config file.
+# * Scout.config[:interval]: the interval at which the instrumentation runs in
+#                            seconds. 30 is the default.
+#                            It is unusual for the user to need to change this.
+# 
 class Scout
   class Reporter
-    cattr_accessor :runner, :interval    
+    cattr_accessor :runner, :interval
     LOCK = Mutex.new
-        
+    
     class << self
       
       def reset!

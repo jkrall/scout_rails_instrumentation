@@ -10,59 +10,55 @@ class Scout
   
   class << self
     
-    # returns true if configuration was successfully loaded, false if not
-    def start!
+    def start!(&initializer)
       self.reset!
       if self.load_configuration
         self.start_reporter!
-        return true
+        yield
       end
-      return false
     end
     
     # Load configuration from yaml. Only loads once in the beginning.
     # sets self.plugin_id, and returns true if successful
     def load_configuration
-      self.config={
-        :plugin_id=>nil,              # must be set by user in configuration, and must match the plugin id assigned by scoutapp.com
-        :explain_queries_over=>100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
-        :interval=>30                 # frequency of execution of the background thread, in seconds
+      self.config = {
+        :plugin_id => nil,              # must be set by user in configuration, and must match the plugin id assigned by scoutapp.com
+        :explain_queries_over => 100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
+        :interval => 30                 # frequency of execution of the background thread, in seconds
       }
-      config_path=File.join(File.dirname(__FILE__),"../scout_config.yml")  
-    
-      if !File.exists?(config_path)
-        puts "** Could not load Scout Instrumentation. Check for config file at #{config_path}"
-        return false 
+      config_path = File.join(File.dirname(__FILE__), "..", "scout_config.yml")
+      
+      unless File.exists?(config_path)
+        puts "** [ERROR] Could not load Scout Instrumentation."
+        puts "   Check for config file at #{config_path}."
+        raise LoadError.new("Could not load configuration file #{config_path}")
       end
+      
       begin
-        o=YAML.load(File.read(config_path))
-        self.config[:interval]=o['interval'] if o['interval'].is_a?(Integer)
-        self.config[:explain_queries_over]=o['explain_queries_over'] if o['explain_queries_over'].is_a?(Integer)
+        config = YAML.load(File.read(config_path))
+        hostname = `hostname`.chomp
         
-        # this can be a simple value, or a hash of hostnames=>values
-        temp=o[RAILS_ENV]
-                
-        if temp.is_a?(Integer)
-          self.config[:plugin_id]=temp
-          puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV}"
-          return true
-        elsif temp.is_a?(Hash)
-          hostname=`hostname`.chomp
-          temp2=temp[hostname]
-          if temp2.is_a?(Integer)
-            self.config[:plugin_id]=temp2
-            puts "** Scout Instrumentation Loaded with plugin_id=#{self.config[:plugin_id]} for environment=#{RAILS_ENV} and hostname=#{hostname}"
-            return true
-          else
-            puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV} and hostname=#{hostname}"
-          end
-        else  
-          puts "** Scout Instrumentation disabled for environment=#{RAILS_ENV}"
+        self.config[:interval]              = config['interval']              if config['interval'].is_a?(Integer)
+        self.config[:explain_queries_over]  = config['explain_queries_over']  if config['explain_queries_over'].is_a?(Integer)
+        
+        case id_or_hosts = config[RAILS_ENV] # load the plugin for the current environment
+        when Integer
+          self.config[:plugin_id] = id_or_hosts
+        when Hash
+          self.config[:plugin_id] = id_or_hosts[hostname]
+          raise LoadError.new("No valid Plugin ID given.") unless self.config[:plugin_id].is_a?(Integer)
+        when NilClass, FalseClass
+          return false # do not load the instrumentation
+        else
+          raise LoadError.new("Invalid configuration! Expected one or more plugin IDs but got #{id_or_hosts.inspect}")
         end
-        return false # if we got to here, there was no successful config file loading
-      rescue 
-        puts "** Could not load Scout Instrumentation for environment=#{RAILS_ENV} : #{$!}"
-        return false
+        
+        puts "** Scout Instrumentation Loaded with Plugin ID ##{self.config[:plugin_id]} for #{RAILS_ENV} on #{hostname}"
+        return true # successfully loaded configuration
+      rescue LoadError => exception
+        puts "** [ERROR] Could not load Scout Instrumentation for #{RAILS_ENV} on #{hostname}"
+        puts "   Error: %s" % exception.message
+        raise
       end
     end
     

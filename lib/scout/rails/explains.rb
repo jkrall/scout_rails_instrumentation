@@ -1,7 +1,7 @@
 class ActiveRecord::ConnectionAdapters::AbstractAdapter
   def explain(sql)
     # TODO: find a better exception class
-    raise Exception.new("This adapter is not supported. Only MySQL, PostgreSQL, SQLite, and SQLite3 are supported.")
+    raise NotImplementedError.new("This adapter is not supported. Only MySQL, PostgreSQL, SQLite, and SQLite3 are supported.")
   end
 end
 
