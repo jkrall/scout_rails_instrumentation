@@ -18,21 +18,17 @@ class Scout
       end
     end
     
-    # Load configuration from yaml. Only loads once in the beginning.
-    # sets self.plugin_id, and returns true if successful
+    # Load configuration from YAML. Only loads once in the beginning.
+    # 
     def load_configuration
       self.config = {
         :plugin_id => nil,              # must be set by user in configuration, and must match the plugin id assigned by scoutapp.com
         :explain_queries_over => 100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
         :interval => 30                 # frequency of execution of the background thread, in seconds
       }
-      config_path = File.join(File.dirname(__FILE__), "..", "scout_config.yml")
+      config_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "scout_config.yml"))
       
-      unless File.exists?(config_path)
-        puts "** [ERROR] Could not load Scout Instrumentation."
-        puts "   Check for config file at #{config_path}."
-        raise LoadError.new("Could not load configuration file #{config_path}")
-      end
+      raise LoadError.new("Could not locate configuration file #{config_path}") unless File.exists?(config_path)
       
       begin
         config = YAML.load(File.read(config_path))
@@ -42,23 +38,42 @@ class Scout
         self.config[:explain_queries_over]  = config['explain_queries_over']  if config['explain_queries_over'].is_a?(Integer)
         
         case id_or_hosts = config[RAILS_ENV] # load the plugin for the current environment
+        
+        # A Plugin ID was specified
         when Integer
           self.config[:plugin_id] = id_or_hosts
+          
+        # Multiple Hosts specified
         when Hash
           self.config[:plugin_id] = id_or_hosts[hostname]
-          raise LoadError.new("No valid Plugin ID given.") unless self.config[:plugin_id].is_a?(Integer)
+          case self.config[:plugin_id]
+          when NilClass, FalseClass
+            return false # do not load the instrumentation
+          else
+            raise LoadError.new("No valid Plugin ID given.") unless self.config[:plugin_id].is_a?(Integer)
+          end
+          
         when NilClass, FalseClass
           return false # do not load the instrumentation
+          
         else
           raise LoadError.new("Invalid configuration! Expected one or more plugin IDs but got #{id_or_hosts.inspect}")
         end
         
-        puts "** Scout Instrumentation Loaded with Plugin ID ##{self.config[:plugin_id]} for #{RAILS_ENV} on #{hostname}"
+        log! :info, "Loaded with Plugin ID ##{self.config[:plugin_id]} for #{RAILS_ENV} on #{hostname}"
         return true # successfully loaded configuration
-      rescue LoadError => exception
-        puts "** [ERROR] Could not load Scout Instrumentation for #{RAILS_ENV} on #{hostname}"
-        puts "   Error: %s" % exception.message
-        raise
+      end
+    rescue Exception => e
+      if RAILS_ENV == "production"
+        log! :fatal, "*"*60
+        log! :fatal, "Could not load Scout Instrumentation for #{RAILS_ENV} on #{hostname}."
+        log! :fatal, "An error prevented starting successfully:"
+        log! :fatal, "  %s" % e.message
+        log! :fatal, "Disabled until the problem can be resolved."
+        log! :fatal, "*"*60
+      else
+        log! :fatal, "Could not load Scout Instrumentation for %s on %s: %s" % [RAILS_ENV, `hostname`.chomp, e.message]
+        raise e
       end
     end
     
@@ -120,6 +135,18 @@ class Scout
     
     ### Utils
     
+    # Logs to the Rails default logger, to STDERR, and to the Scout
+    # Instrumentation log.
+    # 
+    def log!(level, message)
+      if RAILS_ENV == "production" and [:error, :fatal].include?(level)
+        self.logger.send(level, message)
+        RAILS_DEFAULT_LOGGER.send(level, "** [Scout] %s" % message)
+        RAILS_DEFAULT_LOGGER.flush
+      end
+      self.stderr.send(level, message)
+    end
+    
     # Fixes the runtimes to be in milliseconds.
     # 
     def fix_runtimes_to_ms!(runtimes)
@@ -139,8 +166,17 @@ class Scout
     def logger
       @logger ||= begin
                     logger = Logger.new(File.join(RAILS_ROOT, "log", "scout_instrumentation.log"))
-                    logger.level = ActiveRecord::Base.logger.level
+                    logger.level = RAILS_DEFAULT_LOGGER.level # ActiveRecord::Base.logger.level
                     logger.formatter = proc{|s,t,p,m|"%5s [%s] %s\n" % [s, t.strftime("%Y-%m-%d %H:%M:%S"), m]}
+                    logger
+                  end
+    end
+    
+    def stderr
+      @stderr ||= begin
+                    logger = Logger.new(STDERR)
+                    logger.level = RAILS_DEFAULT_LOGGER.level
+                    logger.formatter = proc{|s,t,p,m|"** [Scout] %s\n" % [m] }
                     logger
                   end
     end
