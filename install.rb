@@ -1,10 +1,12 @@
 # This file is executed when the plugin is installed. It sets up the
 # configuration file and provides next steps to put the plugin to use.
 
+RAILS_ROOT = File.join(File.dirname(__FILE__), '..', '..', '..') unless defined?(RAILS_ROOT)
+
 # template 
-config_file_name = 'scout_config.yml'
+config_file_name = 'scout.yml'
 template_path = File.join(File.dirname(__FILE__), 'assets', 'scout_config_template')
-path = File.expand_path(File.join(File.dirname(__FILE__), config_file_name))
+path = File.expand_path(File.join(RAILS_ROOT, 'config', config_file_name))
 
 if File.exists?(path)
   puts "You already have a configuration file at #{path}. We've left it as-is."

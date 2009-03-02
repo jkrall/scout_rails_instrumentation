@@ -26,7 +26,7 @@ class Scout
         :explain_queries_over => 100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
         :interval => 30                 # frequency of execution of the background thread, in seconds
       }
-      config_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "scout_config.yml"))
+      config_path = File.expand_path(File.join(RAILS_ROOT, "config", "scout.yml"))
       
       raise LoadError.new("Could not locate configuration file #{config_path}") unless File.exists?(config_path)
       
