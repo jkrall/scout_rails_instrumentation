@@ -11,13 +11,13 @@ class ScoutTest < ActiveSupport::TestCase
   
   def test_startup_resets_reports
     Scout.reports = {}
-    assert_nothing_raised { Scout.start! }
+    assert_nothing_raised { Scout.start! {} }
     assert_nil Scout.reports
   end
   
   def test_startup_starts_the_reporter_background_thread
     assert_nil Scout::Reporter.runner
-    assert_nothing_raised { Scout.start! }
+    assert_nothing_raised { Scout.start! {} }
     assert_equal Thread, Scout::Reporter.runner.class
     assert Scout::Reporter.runner.alive?
   end
