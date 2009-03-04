@@ -11,8 +11,8 @@ path = File.expand_path(File.join(RAILS_ROOT, 'config', config_file_name))
 if File.exists?(path)
   puts "You already have a configuration file at #{path}. We've left it as-is."
   puts "This is normal if you've re-installed the plugin."
-  puts "However, please check #{template_path} to see if"
-  puts "anything has changed since your config file was created."
+  puts "However, please check #{File.expand_path(template_path)}"
+  puts "to see if anything has changed since your config file was created."
 else
   File.open(path, "w") do |f|
     f.puts IO.read(template_path)

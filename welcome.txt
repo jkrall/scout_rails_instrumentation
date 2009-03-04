@@ -8,7 +8,7 @@ it won't hurt anything).
 Next Steps:
  1. Log into your account at http://scoutapp.com. Install the Rails
     Instrumentation Plugin, and note the Plugin ID.
- 2. Open the configuration file at scout_config.yml
+ 2. Open the configuration file at scout.yml
     Put in your Plugin ID for production.
  3. Deploy your application and watch the metrics come in at http://scoutapp.com
 
