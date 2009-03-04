@@ -95,11 +95,11 @@ class Scout
       def handle_exception!(e)
         case e
         when Timeout::Error
-          logger.error e.message
+          logger.error "Unable to queue the report, the agent timed out"
+          logger.debug "+ abridged backtrace:\n\t%s" % e.backtrace[0..5].join("\n\t")
         when Exception
           logger.error "An unexpected error occurred while reporting: #{e.message}"
-          logger.error e.inspect
-          logger.error "\t" + e.backtrace.join("\n\t")
+          logger.error "%s\n\t%s" % [e.inspect, e.backtrace.join("\n\t")]
         end
       end
       
@@ -119,8 +119,10 @@ class Scout
       end
       
       def calculate_avg_request_time_and_throughput(report)
+        # average all averages to get the overall average request time
         avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg] }.sum / report[:actions].size
-        throughput = (60.0 * 1000) / avg_request_time # adjusts for ms
+        # how many requests can occur in 1000ms if the average is Xms
+        throughput = 1000.0 / avg_request_time
         [avg_request_time, throughput]
       end
       
