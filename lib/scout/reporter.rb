@@ -1,13 +1,4 @@
-begin
-  # TODO: Fix this issue with the load agent path.
-  $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
-  $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
-  $:.unshift('/Users/andre/projects/rails/scout_agent/lib/')
-  $:.unshift('/root/scout_agent/lib/')  
-  require 'scout_agent/api' # ScoutAgent::API
-rescue LoadError
-  raise "Unable load the ScoutAgent::API"
-end
+require 'scout_agent/api' # ScoutAgent::API
 
 class Scout
   # Reporter relies on two configuration settings:
