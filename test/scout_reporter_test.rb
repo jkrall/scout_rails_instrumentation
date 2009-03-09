@@ -1,5 +1,6 @@
 require 'test_helper'
 require File.join(File.dirname(__FILE__), 'test_helper')
+require 'scout_agent/api' # ScoutAgent::API
 
 class ScoutReporterTest < ActiveSupport::TestCase
   include ScoutTestHelpers

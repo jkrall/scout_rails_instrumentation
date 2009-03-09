@@ -1,5 +1,3 @@
-require 'scout_agent/api' # ScoutAgent::API
-
 class Scout
   # Reporter relies on two configuration settings:
   # * config[:plugin_id]: the plugin id provided in the users' account at
