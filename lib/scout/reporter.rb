@@ -61,6 +61,7 @@ class Scout
         end
         
         report[:time] = report_time
+        report[:snapshot] = false # do not take a snapshot by default
         
         # calculate report runtimes
         calculate_report_runtimes!(report)
@@ -69,6 +70,15 @@ class Scout
         report[:avg_request_time], report[:throughput] = calculate_avg_request_time_and_throughput(report)
         
         run_explains_for_slow_queries!(report)
+        
+        # take snapshot if an explain was run
+        if report.delete(:snapshot)
+          logger.debug "Snapshot taken"
+          ScoutAgent::API.take_snapshot
+        end
+        
+        # TODO: obfuscate queries
+        # TODO: create lookup table of queries to reduce report size
         
         # enqueue the message for background processing
         begin
@@ -122,8 +132,7 @@ class Scout
             queries.each_with_index do |(ms, sql), j|
               if sql =~ /^SELECT /i and ms > Scout.config[:explain_queries_over]
                 report[:actions][path][:queries][i][j] << ActiveRecord::Base.connection.explain(sql)
-                # TODO: determine a better place for the snapshot
-                ScoutAgent::API.take_snapshot(:background => true)
+                report[:snapshot] = true
               end
             end
           end
