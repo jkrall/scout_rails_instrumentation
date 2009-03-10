@@ -27,6 +27,7 @@ class Scout
           Thread.new(self) do |reporter|
             Thread.current[:pid] = $$ # record where thread is running,
                                       # so we can remove runaways (Passenger)
+            sleep(rand(15)) # stagger report cycles among running processes
             loop do
               sleep(self.interval)
               reporter.run
@@ -76,8 +77,8 @@ class Scout
             logger.debug "Report queued"
           else
             logger.error "Error:  #{response.error_message} (#{response.error_code})"
-          end          
-         
+          end
+          
         end
       end
       
