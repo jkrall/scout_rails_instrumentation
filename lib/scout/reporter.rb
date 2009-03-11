@@ -77,7 +77,8 @@ class Scout
           ScoutAgent::API.take_snapshot
         end
         
-        # TODO: obfuscate queries
+        obfuscate_queries!(report)
+        
         # TODO: create lookup table of queries to reduce report size
         
         # enqueue the message for background processing
@@ -85,6 +86,7 @@ class Scout
           response = ScoutAgent::API.queue_for_mission(Scout.config[:plugin_id], report)
           if response.success?
             logger.debug "Report queued"
+            logger.debug "Report size: %i" % report.to_json.length
           else
             logger.error "Error:  #{response.error_message} (#{response.error_code})"
             logger.debug "Failed report: %s" % report.inspect
@@ -141,6 +143,16 @@ class Scout
       rescue Exception => e
         logger.error "An error occurred EXPLAINing a query: %s" % e.message
         # logger.error "\t%s" % e.backtrace.join("\n\t") # unneeded
+      end
+      
+      def obfuscate_queries!(report)
+        report[:actions].each do |(path, action)|
+          action[:queries].each_with_index do |queries, i|
+            queries.each_with_index do |(ms, sql), j|
+              report[:actions][path][:queries][i][j] = Scout.obfuscate_sql(sql)
+            end
+          end
+        end
       end
       
       def logger(*args)
