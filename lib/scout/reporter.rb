@@ -87,6 +87,7 @@ class Scout
             logger.debug "Report queued"
           else
             logger.error "Error:  #{response.error_message} (#{response.error_code})"
+            logger.debug "Failed report: %s" % report.inspect
           end
           
         end
