@@ -199,6 +199,9 @@ class Scout
       sql.gsub!(/'[^']*'/, "?")
       # remove literal numerical values
       sql.gsub!(/\b\d+\b/, "?")
+      # remove unneeded whitespace
+      sql.strip!
+      sql.squeeze!(' ')
       sql
     end
     
