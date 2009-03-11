@@ -78,8 +78,7 @@ class Scout
         end
         
         obfuscate_queries!(report)
-        
-        # TODO: create lookup table of queries to reduce report size
+        minimize_query_duplication!(report)
         
         # enqueue the message for background processing
         begin
@@ -87,6 +86,7 @@ class Scout
           if response.success?
             logger.debug "Report queued"
             logger.debug "Report size: %i" % report.to_json.length
+            # logger.debug "Report: %s" % report.to_json
           else
             logger.error "Error:  #{response.error_message} (#{response.error_code})"
             logger.debug "Failed report: %s" % report.inspect
@@ -99,10 +99,11 @@ class Scout
         case e
         when Timeout::Error
           logger.error "Unable to queue the report, the agent timed out"
-          logger.debug "+ abridged backtrace:\n\t%s" % e.backtrace[0..5].join("\n\t")
+          logger.debug "+ abridged backtrace:\n\t%s" % e.backtrace[0..15].join("\n\t")
         when Exception
           logger.error "An unexpected error occurred while reporting: #{e.message}"
           logger.error "%s\n\t%s" % [e.inspect, e.backtrace.join("\n\t")]
+          logger.debug "Failed report: %s" % report.inspect
         end
       end
       
@@ -149,7 +150,23 @@ class Scout
         report[:actions].each do |(path, action)|
           action[:queries].each_with_index do |queries, i|
             queries.each_with_index do |(ms, sql), j|
-              report[:actions][path][:queries][i][j] = Scout.obfuscate_sql(sql)
+              report[:actions][path][:queries][i][j][1] = Scout.obfuscate_sql(sql)
+            end
+          end
+        end
+      end
+      
+      def minimize_query_duplication!(report)
+        report[:queries] = []
+        report[:actions].each do |(path, action)|
+          action[:queries].each_with_index do |queries, i|
+            queries.each_with_index do |(ms, sql), j|
+              index = report[:queries].index(sql)
+              unless index
+                index = report[:queries].length
+                report[:queries] << sql
+              end
+              report[:actions][path][:queries][i][j][1] = index
             end
           end
         end
