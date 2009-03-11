@@ -30,4 +30,10 @@ class ScoutUtilsTest < ActiveSupport::TestCase
     # assert false
   end
   
+  def test_obfuscate_sql_handles_a_variety_of_queries_correctly
+    assert_equal "SELECT * FROM actors WHERE id = ?;", Scout.obfuscate_sql("SELECT * FROM actors WHERE id = 10;")
+    assert_equal "SELECT * FROM actors WHERE name LIKE ?;", Scout.obfuscate_sql("SELECT * FROM actors WHERE name LIKE '%jones%';")
+    assert_equal "SELECT * FROM actors WHERE secret = ?;", Scout.obfuscate_sql("SELECT * FROM actors WHERE secret = 'bee''s nees';")
+  end
+  
 end
