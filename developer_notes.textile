@@ -11,7 +11,7 @@ h2. Rails Plugin
 The Rails Plugin (instrumentation hooks) should result in data able to recreate
 a report like the following:
 
-https://gist.github.com/bdaa31aa56e04b9c31a6
+https://gist.github.com/35157034799c6208e690
 
 The data for each action will basically come down to:
 * database query time (min, max, avg)
