@@ -5,6 +5,7 @@ $:.unshift('/Users/itsderek23/Projects/scout_agent/lib/')
 $:.unshift('/Users/mtodd/Projects/Highgroove/Scout/scout_agent/lib/')
 $:.unshift('/Users/andre/projects/rails/scout_agent/lib/')
 $:.unshift('/root/scout_agent/lib/')
+$:.unshift('/var/scout_agent/lib/')
 
 require 'scout/reporter' # Scout::Reporter
 
