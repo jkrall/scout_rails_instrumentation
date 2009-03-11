@@ -1,3 +1,5 @@
+REQUIRES ACCESS TO THE NEWER VERSION OF SCOUT (CURRENTLY INVITE ONLY)
+
 This plugin works together with http://scoutapp.com to provide insight into the health and performance 
 of your Rails application while it runs in production.
 
