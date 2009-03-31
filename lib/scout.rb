@@ -129,9 +129,10 @@ class Scout
       
       self.reports[:actions][path][:num_requests]   += 1
       self.reports[:actions][path][:runtime]        << runtimes[:total]
-      self.reports[:actions][path][:db_runtime]     << self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
+      db_runtime = self.queries.inject(0.0){ |total, (runtime, _)| total += runtime }
+      self.reports[:actions][path][:db_runtime]     << db_runtime
       self.reports[:actions][path][:render_runtime] << runtimes[:view]
-      self.reports[:actions][path][:other_runtime]  << (runtimes[:total] - runtimes[:view] - self.reports[:actions][path][:db_runtime])
+      self.reports[:actions][path][:other_runtime]  << (runtimes[:total] - runtimes[:view] - db_runtime)
       self.reports[:actions][path][:queries]        << self.queries
     end
     
@@ -147,6 +148,7 @@ class Scout
         :runtime          => [],
         :db_runtime       => [],
         :render_runtime   => [],
+        :other_runtime    => [],
         :queries          => []
       }
     end
