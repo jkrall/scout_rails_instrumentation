@@ -66,8 +66,8 @@ class Scout
         # calculate report runtimes
         calculate_report_runtimes!(report)
         
-        # calculate average request time and throughput
-        report[:avg_request_time], report[:throughput] = calculate_avg_request_time_and_throughput(report)
+        # calculate average request time and number of requests
+        report[:avg_request_time], report[:num_requests] = calculate_avg_request_time_and_num_requests(report)
         
         run_explains_for_slow_queries!(report)
         
@@ -122,12 +122,10 @@ class Scout
         [(runtimes.sum / num_requests.to_f), runtimes.max]
       end
       
-      def calculate_avg_request_time_and_throughput(report)
-        # average all averages to get the overall average request time
-        avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg] }.sum / report[:actions].size
-        # how many requests can occur in 1000ms if the average is Xms
-        throughput = 1000.0 / avg_request_time
-        [avg_request_time, throughput]
+      def calculate_avg_request_time_and_num_requests(report)
+        total_num_requests = report[:actions].map{|(p,a)| a[:num_requests] }.sum
+        avg_request_time = report[:actions].map{|(p,a)| a[:runtime_avg]*a[:num_requests] }.sum / total_num_requests
+        [avg_request_time, total_num_requests]
       end
       
       def run_explains_for_slow_queries!(report)
