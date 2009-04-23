@@ -66,8 +66,9 @@ class Scout
         
         begin
           require 'scout_agent/api' # ScoutAgent::API
-        rescue LoadError
-          raise "Unable load the ScoutAgent::API. Make sure that you've installed the scout_agent gem."
+        rescue LoadError => e
+          
+          raise "Unable to load the ScoutAgent::API. Make sure that you've installed the scout_agent gem.\nYou may also need to install it as root.\n%s" % e.message
         end
         
         log! :info, "Loaded with Plugin ID ##{self.config[:plugin_id]} for #{RAILS_ENV} on #{hostname}"
