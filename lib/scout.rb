@@ -27,7 +27,7 @@ class Scout
     def load_configuration
       self.config = {
         :plugin_id => nil,              # must be set by user in configuration, and must match the plugin id assigned by scoutapp.com
-        :explain_queries_over => 100,   # queries taking longer than this (in milliseconds) will be EXPLAINed
+        :explain_queries_over => 500,   # queries taking longer than this (in milliseconds) will be EXPLAINed
         :interval => 30                 # frequency of execution of the background thread, in seconds
       }
       config_path = File.expand_path(File.join(RAILS_ROOT, "config", "scout.yml"))
